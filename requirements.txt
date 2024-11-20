@@ -1,0 +1,4 @@
+python-dotenv
+numpy<2
+openai
+openai-whisper
