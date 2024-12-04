@@ -3,7 +3,7 @@ import speech_synthesis
 import speech_recognition
 
 # Path to the CSV file
-csv_file_path = "question_answer.csv"
+csv_file_path = "../data/question_answer.csv"
 
 # Dictionary to store the data
 question_answer = {}
@@ -27,4 +27,4 @@ for question, answer in question_answer.items():
     speech_synthesis.text_to_speech(question, "question.mp3")
     # Wait for user to answer
     print("The given answer is:")
-    speech_recognition.speech_to_text("answer.mp3")
+    speech_recognition.speech_to_text("../data/audio/answer.mp3")
