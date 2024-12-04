@@ -17,14 +17,23 @@ try:
             question = row["question"]
             answer = row["answer"]
             question_answer[question] = answer
-
 except FileNotFoundError:
     print(f"File not found: {csv_file_path}")
 except Exception as e:
     print(f"An error occurred: {e}")
 
-for question, answer in question_answer.items():
-    speech_synthesis.text_to_speech(question, "question.mp3")
-    # Wait for user to answer
-    print("The given answer is:")
-    speech_recognition.speech_to_text("../data/audio/answer.mp3")
+def get_question_answers():
+    return question_answer
+
+def get_questions():
+    return list(question_answer.keys())
+
+def get_answers():
+    return list(question_answer.values())
+
+if __name__ == '__main__':
+    for question, answer in question_answer.items():
+        speech_synthesis.text_to_speech(question, "question.mp3")
+        # Wait for user to answer
+        print("The given answer is:")
+        speech_recognition.speech_to_text("../data/audio/answer.mp3")
