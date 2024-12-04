@@ -11,7 +11,7 @@ question_answer = {}
 # Read the CSV file
 try:
     with open(csv_file_path, mode="r", encoding="utf-8") as file:
-        csv_reader = csv.DictReader(file)
+        csv_reader = csv.DictReader(file, delimiter=";")
         for row in csv_reader:
             # Use the 'question' as the key and 'answer' as the value
             question = row["question"]

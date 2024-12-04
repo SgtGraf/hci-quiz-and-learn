@@ -1,2 +1,22 @@
-question,answer
-What is python?,a programming language
+question;answer
+What is python?;a programming language
+What does CPU stand for?;Central Processing Unit
+What is the main function of an operating system?;To manage hardware and software resources
+What does HTTP stand for?;Hypertext Transfer Protocol
+What is the primary purpose of a firewall in a computer network?;To protect the network by filtering incoming and outgoing traffic
+What is the difference between RAM and ROM?;RAM is volatile memory used for temporary storage, while ROM is non-volatile and stores permanent data.
+What is an IP address?;A unique identifier for a device on a network
+What does SQL stand for?;Structured Query Language
+What is the purpose of a database?;To store, retrieve, and manage data efficiently
+What is phishing in cybersecurity?;A fraudulent attempt to obtain sensitive information by pretending to be a trustworthy entity
+What is the main difference between a hub and a switch in networking?;A hub broadcasts data to all devices, while a switch directs data only to the intended device
+What is the function of DNS in networking?;To translate domain names into IP addresses
+What is the full form of IoT?;Internet of Things
+What is the difference between a compiler and an interpreter?;A compiler translates code into machine language before execution, while an interpreter translates code line-by-line during execution
+What is an API?;Application Programming Interface, which allows different software applications to communicate
+What does GPU stand for?;Graphics Processing Unit
+What is a subnet mask used for?;To divide an IP address into network and host portions
+What is cloud computing?;The delivery of computing services over the internet
+What is a MAC address?;A unique identifier assigned to a network interface card
+What does SSD stand for, and what is it used for?;Solid State Drive, used for data storage
+What is virtualization in IT?;The creation of virtual versions of resources like servers, storage, and networks
