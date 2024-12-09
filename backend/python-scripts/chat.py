@@ -14,7 +14,7 @@ def evaluate_quiz_question(question, user_answer, real_answer):
     completion = client.chat.completions.create(
         model="gpt-4",
         messages=[
-            {"role": "system", "content": "You are an assistant tasked with evaluating user answers to quiz questions. The Real Answer is the solution provided by the quiz, stick to that. Provide feedback comparing the user's answer to the correct answer. Talk directly to the user and straight to the point."},
+            {"role": "system", "content": "You are an assistant tasked with evaluating user answers to quiz questions. The Real Answer is the solution provided by the quiz, stick to that. Provide feedback comparing the user's answer to the correct answer. Talk directly to the user and straight to the point. Keep it as short as possible"},
             {"role": "user", "content": f"Question: {question}\nUser Answer: {user_answer}\nReal Answer: {real_answer}"}
         ]
     )

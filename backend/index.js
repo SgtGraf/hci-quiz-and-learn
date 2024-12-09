@@ -9,7 +9,7 @@ const ttsRoutes = require('./routes/ttsRoutes');
 const connectorRoutes = require('./routes/connectorRoutes');
 
 const app = express();
-const PORT = 5000;
+const PORT = 3000;
 
 // Middleware
 app.use(cors());
