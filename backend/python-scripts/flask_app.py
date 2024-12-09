@@ -16,6 +16,7 @@ api_key = os.getenv("OPENAI_API_KEY")
 app = Flask(__name__)
 model = whisper.load_model("base")
 
+# Enable CORS
 CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}})
 
 
@@ -24,19 +25,38 @@ def stream_tts(input_text):
     client = OpenAI(api_key=api_key)
 
     try:
-        # Call OpenAI API to generate TTS
         response = client.audio.speech.create(
             model="tts-1",
             voice="alloy",
             input=input_text
         )
-
-        # Yield audio chunks as they are generated
         for chunk in response.iter_bytes():
             yield chunk
-
     except Exception as e:
         raise RuntimeError(f"TTS generation failed: {e}")
+
+
+# Chat Evaluation Function
+def evaluate_quiz_question(question, user_answer, real_answer):
+    client = OpenAI(api_key=api_key)
+
+    try:
+        completion = client.chat.completions.create(
+            model="gpt-4",
+            messages=[
+                {
+                    "role": "system",
+                    "content": "You are an assistant tasked with evaluating user answers to quiz questions. The Real Answer is the solution provided by the quiz, stick to that. Provide feedback comparing the user's answer to the correct answer. Talk directly to the user and straight to the point. Keep it as short as possible."
+                },
+                {
+                    "role": "user",
+                    "content": f"Question: {question}\nUser Answer: {user_answer}\nReal Answer: {real_answer}"
+                }
+            ]
+        )
+        return completion.choices[0].message.content.strip()
+    except Exception as e:
+        raise RuntimeError(f"Quiz evaluation failed: {e}")
 
 
 # Flask Endpoints
@@ -88,7 +108,6 @@ def tts_stream():
         return jsonify({"error": "No input text provided"}), 400
 
     try:
-        # Stream audio response
         return Response(
             stream_tts(input_text),
             mimetype="audio/mpeg",
@@ -99,6 +118,24 @@ def tts_stream():
         )
     except Exception as e:
         return jsonify({"error": f"TTS generation failed: {e}"}), 500
+
+
+# Chat Evaluation Endpoint
+@app.route('/api/evaluate_quiz', methods=['POST'])
+def evaluate_quiz():
+    data = request.json
+    question = data.get("question")
+    user_answer = data.get("user_answer")
+    real_answer = data.get("real_answer")
+
+    if not all([question, user_answer, real_answer]):
+        return jsonify({"error": "All fields (question, user_answer, real_answer) are required"}), 400
+
+    try:
+        evaluation = evaluate_quiz_question(question, user_answer, real_answer)
+        return jsonify({"evaluation": evaluation})
+    except Exception as e:
+        return jsonify({"error": f"Evaluation failed: {e}"}), 500
 
 
 if __name__ == '__main__':
