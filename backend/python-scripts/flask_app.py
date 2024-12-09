@@ -16,6 +16,8 @@ api_key = os.getenv("OPENAI_API_KEY")
 app = Flask(__name__)
 model = whisper.load_model("base")
 
+CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}})
+
 
 # Generate TTS Function (Real-time Streaming)
 def stream_tts(input_text):
@@ -32,8 +34,6 @@ def stream_tts(input_text):
         # Yield audio chunks as they are generated
         for chunk in response.iter_bytes():
             yield chunk
-
-CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}})
 
     except Exception as e:
         raise RuntimeError(f"TTS generation failed: {e}")
