@@ -1,3 +1,5 @@
+import question
+from flask_cors import CORS
 from flask import Flask, request, jsonify, Response
 import os
 import whisper
@@ -31,6 +33,8 @@ def stream_tts(input_text):
         for chunk in response.iter_bytes():
             yield chunk
 
+CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}})
+
     except Exception as e:
         raise RuntimeError(f"TTS generation failed: {e}")
 
@@ -38,17 +42,15 @@ def stream_tts(input_text):
 # Flask Endpoints
 @app.route('/api/question_answers', methods=['GET'])
 def get_question_answers():
-    return jsonify({"message": "Placeholder for question_answers"})
-
+    return question.get_question_answers()
 
 @app.route('/api/questions', methods=['GET'])
 def get_questions():
-    return jsonify({"message": "Placeholder for questions"})
-
+    return question.get_questions()
 
 @app.route('/api/answers', methods=['GET'])
 def get_answers():
-    return jsonify({"message": "Placeholder for answers"})
+    return question.get_answers()
 
 
 # Audio Transcription Endpoint
