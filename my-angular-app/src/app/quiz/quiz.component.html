@@ -34,6 +34,20 @@
     <div class="speech-indicator" *ngIf="isSpeaking">
       <div class="pulse"></div>
       <p>Listening...</p>
-    </div>        
+    </div>
+    
+    <!-- Popup Modal for Loading Spinner and Feedback -->
+    <div class="popup" *ngIf="loading || feedback">
+      <div class="popup-content">
+        <div *ngIf="loading" class="spinner">
+          <div class="spinner-circle"></div>
+          <p>Submitting your answer...</p>
+        </div>
+        <div *ngIf="!loading && feedback" class="feedback">
+          <p>{{ feedback }}</p>
+          <button (click)="closePopup()">OK</button>
+        </div>
+      </div>
+    </div>
   </div>
 </div>

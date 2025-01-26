@@ -25,6 +25,9 @@ export class QuizComponent {
   totalQuestions: number = 0;
   quizComplete: boolean = false;
   percentage: number = 0;
+  loading: boolean = false; // To control the spinner visibility
+  feedback: string = ''; // To display the evaluation feedback
+  nextQuestionPending: boolean = false;
 
   constructor(private http: HttpClient, private cdr: ChangeDetectorRef) {
     this.loadQuestions();
@@ -41,15 +44,15 @@ export class QuizComponent {
         next: (data) => {
           try {
             console.log('Raw JSON Data:', data);
-  
+
             if (!Array.isArray(data) || data.length === 0) {
               throw new Error('No valid questions received.');
             }
-  
+
             this.questions = data.map((item) => item.question.trim());
             this.correctAnswers = data.map((item) => item.answer.trim());
             this.totalQuestions = this.questions.length;
-  
+
             if (this.totalQuestions > 0) {
               this.currentQuestion = this.questions[0];
               this.correctAnswer = this.correctAnswers[0];
@@ -144,62 +147,78 @@ export class QuizComponent {
     };
   
     recognition.start();
-  }  
-  
-  updateSpeechIndicator(lineHeight: number) {
-    const lines = document.querySelectorAll('.line');
-    lines.forEach((line, index) => {
-      const height = Math.random() * lineHeight + 10; // Add randomness for a natural look
-      (line as HTMLElement).style.height = `${height}px`;
-    });
-  }    
+  }     
 
   submitAnswer() {
     if (!this.currentQuestion || !this.userAnswer) {
-      alert("Please provide an answer before submitting.");
+      alert('Please provide an answer before submitting.');
       return;
     }
-  
+
     // Payload
     const payload = {
       question: this.currentQuestion,
       user_answer: this.userAnswer,
       real_answer: this.correctAnswer,
     };
+
+    // Show the loading spinner
+    this.loading = true;
+    this.feedback = '';
+    this.nextQuestionPending = false;
+
+    this.http
+      .post('http://127.0.0.1:7990/api/evaluate_quiz', payload, {
+        headers: new HttpHeaders({ 'Content-Type': 'application/json' }),
+      })
+      .subscribe({
+        next: (response: any) => {
+          console.log('Evaluation Response:', response);
+
+          // Hide spinner and show feedback
+          this.loading = false;
+          this.feedback = response.evaluation;
+
+          // Increment correctCount if the answer is correct
+          if (
+            response.evaluation.toLowerCase().includes('your answer is correct')
+          ) {
+            this.correctCount++;
+          }
+
+          // Mark that the next question is ready to be loaded
+          this.nextQuestionPending = true;
+        },
+        error: (error) => {
+          console.error('Error submitting answer:', error);
+          this.loading = false;
+          this.feedback = 'Failed to submit your answer. Please try again.';
+        },
+      });
+    }
+
+  closePopup() {
+    // Hide the feedback popup
+    this.feedback = '';
   
-    this.http.post('http://127.0.0.1:7990/api/evaluate_quiz', payload, {
-      headers: new HttpHeaders({ 'Content-Type': 'application/json' }),
-    }).subscribe({
-      next: (response: any) => {
-        console.log("Evaluation Response:", response);
-        alert(response.evaluation); // Display feedback
-  
-        // Only increment correctCount if the evaluation clearly states the answer is correct
-        if (response.evaluation.toLowerCase().includes('your answer is correct')) {
-          this.correctCount++;
-        }
-  
-        this.loadNextQuestion();
-      },
-      error: (error) => {
-        console.error("Error submitting answer:", error);
-        alert("Failed to submit your answer. Please try again.");
-      },
-    });
-  }  
+    // If the next question is pending, load it
+    if (this.nextQuestionPending) {
+      this.loadNextQuestion();
+    }
+  }
 
   loadNextQuestion() {
     this.questionIndex++;
     if (this.questionIndex < this.questions.length) {
-        this.currentQuestion = this.questions[this.questionIndex];
-        this.correctAnswer = this.correctAnswers[this.questionIndex];
-        this.userAnswer = '';
-        this.recognizedText = '';
-        this.triggerTTS(); // Automatically play the next question
+      this.currentQuestion = this.questions[this.questionIndex];
+      this.correctAnswer = this.correctAnswers[this.questionIndex];
+      this.userAnswer = '';
+      this.recognizedText = '';
+      this.triggerTTS(); // Automatically play the next question
     } else {
-        this.calculateResults();
+      this.calculateResults();
     }
-}
+  }
 
   calculateResults() {
     this.quizComplete = true;
