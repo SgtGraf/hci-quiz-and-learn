@@ -1,0 +1,32 @@
+<header>
+  <h1>Welcome to the Quiz App</h1>
+</header>
+
+<div class="home-container">
+  <button (click)="fetchQuestions()" class="btn-primary">Show Questions</button>
+
+  <div class="questions-list" *ngIf="questions?.length">
+    <h2>Questions:</h2>
+    <ul>
+      <li *ngFor="let question of questions">{{ question }}</li>
+    </ul>
+  </div>
+
+  <div class="speech-section">
+    <h2>Speech Recognition</h2>
+    <p class="recognized-text">{{ recognizedText || 'Say something...' }}</p>
+    <button (click)="startSpeechRecognition()" class="btn-secondary">
+      Start Speaking
+    </button>
+  </div>
+
+  <div class="speech-synthesis">
+    <h2>Speech Synthesis</h2>
+    <input
+      type="text"
+      [(ngModel)]="textToSpeak"
+      placeholder="Type something to speak"
+    />
+    <button (click)="synthesizeSpeech()" class="btn-secondary">Speak</button>
+  </div>
+</div>

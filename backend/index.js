@@ -9,10 +9,15 @@ const ttsRoutes = require('./routes/ttsRoutes');
 const connectorRoutes = require('./routes/connectorRoutes');
 
 const app = express();
-const PORT = 3000;
+const PORT = 7990;
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: 'http://localhost:4200',
+  methods: ['GET', 'POST', 'OPTIONS'], // Include OPTIONS for preflight requests
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
+}));
 app.use(bodyParser.json());
 
 // Routes

@@ -1,0 +1,85 @@
+/* General body styling */
+body {
+  font-family: 'Open Sans', sans-serif;
+  background-color: #f4f4f9;
+  color: #333;
+  margin: 0;
+  padding: 0;
+}
+
+/* Header */
+header {
+  background-color: #007bff;
+  color: white;
+  padding: 1rem;
+  text-align: center;
+  font-size: 1.2rem;
+}
+
+/* Quiz container */
+.quiz-container {
+  max-width: 600px;
+  margin: 2rem auto;
+  background-color: white;
+  padding: 2rem;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+/* Question text */
+.question-text {
+  font-size: 1.25rem;
+  font-weight: bold;
+  margin-bottom: 1rem;
+}
+
+/* Buttons */
+button {
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  margin: 0.5rem;
+  transition: background-color 0.3s ease;
+}
+
+button:hover {
+  background-color: #0056b3;
+  color: white;
+}
+
+button:disabled {
+  background-color: #ddd;
+  cursor: not-allowed;
+}
+
+/* Input fields */
+input[type='text'] {
+  padding: 0.5rem;
+  width: 80%;
+  margin: 1rem 0;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+input[type='text']:focus {
+  outline: none;
+  border-color: #007bff;
+}
+
+/* Progress bar */
+.progress-bar {
+  background-color: #007bff;
+  height: 20px;
+  border-radius: 10px;
+  margin: 1rem 0;
+}
+
+.progress-bar-inner {
+  background-color: #0056b3;
+  height: 100%;
+  width: 50%; /* Dynamically update this based on progress */
+  border-radius: 10px;
+}

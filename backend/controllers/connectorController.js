@@ -3,7 +3,7 @@ const fs = require('fs');
 const FormData = require('form-data');
 
 // Base URL for API routes
-const BASE_URL = 'http://localhost:3000';
+const BASE_URL = 'http://127.0.0.1:7990';
 
 const callWhisperRoute = async (audioFilePath) => {
     const formData = new FormData();
