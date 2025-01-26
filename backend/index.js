@@ -13,10 +13,11 @@ const PORT = 7990;
 
 // Middleware
 app.use(cors({
-    origin: 'http://localhost:3000', // Allow requests from this frontend origin
-    methods: ['GET', 'POST', 'OPTIONS'], // Specify allowed methods
-    credentials: true // Allow cookies if needed
-  }));
+  origin: 'http://localhost:4200',
+  methods: ['GET', 'POST', 'OPTIONS'], // Include OPTIONS for preflight requests
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
+}));
 app.use(bodyParser.json());
 
 // Routes

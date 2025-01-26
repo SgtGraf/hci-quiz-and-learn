@@ -16,8 +16,8 @@ api_key = os.getenv("OPENAI_API_KEY")
 app = Flask(__name__)
 model = whisper.load_model("base")
 
-# Enable CORS
-CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}})
+# Enable CORS for all routes
+CORS(app, resources={r"/*": {"origins": "http://localhost:4200"}})
 
 
 # Generate TTS Function (Real-time Streaming)

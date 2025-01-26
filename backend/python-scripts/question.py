@@ -1,6 +1,7 @@
 import csv
 import speech_synthesis
 import speech_recognition
+from flask import jsonify
 
 # Path to the CSV file
 csv_file_path = "../data/question_answer.csv"
@@ -23,7 +24,9 @@ except Exception as e:
     print(f"An error occurred: {e}")
 
 def get_question_answers():
-    return question_answer
+    # Convert the dictionary to a list of objects
+    formatted_data = [{"question": question, "answer": answer} for question, answer in question_answer.items()]
+    return jsonify(formatted_data)
 
 def get_questions():
     return list(question_answer.keys())
