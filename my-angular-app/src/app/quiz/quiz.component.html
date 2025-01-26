@@ -1,8 +1,24 @@
-<h1>Quiz</h1>
-<div *ngIf="currentQuestion">
-  <h2>{{ currentQuestion }}</h2>
-  <button (click)="speakQuestion()">Hear Question</button>
-  <input type="text" [(ngModel)]="userAnswer" placeholder="Type or Speak your answer">
-  <button (click)="submitAnswer()">Submit</button>
-  <button (click)="startSpeechRecognition()">Speak Answer</button>
-</div>
+<header>
+  <h1>Interactive Quiz App</h1>
+</header>
+
+<div class="quiz-container">
+  <div class="progress-bar">
+    <div
+      class="progress-bar-inner"
+      [style.width]="(questionIndex / totalQuestions) * 100 + '%'"
+    ></div>
+  </div>
+
+  <div class="question-text">{{ currentQuestion }}</div>
+
+  <input
+    type="text"
+    [(ngModel)]="userAnswer"
+    placeholder="Type your answer here"
+  />
+
+  <div>
+    <button (click)="submitAnswer()">Submit</button>
+    <button (click)="startSpeechRecognition()">Speak Answer</button>
+  </div>
