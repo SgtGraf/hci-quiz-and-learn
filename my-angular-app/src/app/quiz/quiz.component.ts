@@ -21,6 +21,10 @@ export class QuizComponent {
   userAnswer: string = '';
   recognizedText: string = '';
   questionIndex: number = 0;
+  correctCount: number = 0; // Counter for correct answers
+  totalQuestions: number = 0; // Total number of questions
+  quizComplete: boolean = false; // Flag to indicate quiz completion
+  percentage: number = 0; // Percentage of correct answers
 
   constructor(private http: HttpClient) {
     this.loadQuestions();
@@ -31,19 +35,20 @@ export class QuizComponent {
       next: (data) => {
         try {
           console.log("Raw JSON Data:", data);
-  
+
           // Convert the dictionary to an array of question-answer objects
           const parsedData = Object.entries(data).map(([question, answer]) => ({
             question: question.trim(),
             answer: answer.trim()
           }));
-  
+
           console.log("Parsed Data:", parsedData);
-  
+
           // Map parsed data to questions and answers
           this.questions = parsedData.map(q => q.question);
           this.correctAnswers = parsedData.map(q => q.answer);
-  
+          this.totalQuestions = this.questions.length;
+
           // Set the first question and answer
           if (this.questions.length > 0) {
             this.currentQuestion = this.questions[0];
@@ -61,7 +66,7 @@ export class QuizComponent {
         alert("Failed to load questions. Please try again.");
       }
     });
-  }          
+  }
 
   speakQuestion() {
     const utterance = new SpeechSynthesisUtterance(this.currentQuestion);
@@ -90,6 +95,12 @@ export class QuizComponent {
       next: (response: any) => {
         console.log("Evaluation Response:", response);
         alert(response.evaluation); // Display feedback
+
+        // Check if the response indicates a correct answer
+        if (response.evaluation.toLowerCase().includes('correct')) {
+          this.correctCount++;
+        }
+
         this.loadNextQuestion();
       },
       error: (error) => {
@@ -100,7 +111,6 @@ export class QuizComponent {
   }
 
   startSpeechRecognition() {
-    // Extend SpeechRecognition for compatibility
     const SpeechRecognition =
       (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
 
@@ -135,8 +145,13 @@ export class QuizComponent {
       this.userAnswer = '';
       this.recognizedText = '';
     } else {
-      this.currentQuestion = '';
-      alert('Quiz complete!');
+      this.calculateResults();
     }
+  }
+
+  calculateResults() {
+    this.quizComplete = true;
+    this.percentage = Math.round((this.correctCount / this.totalQuestions) * 100);
+    alert(`Quiz complete! You answered ${this.correctCount} out of ${this.totalQuestions} questions correctly (${this.percentage}%).`);
   }
 }
