@@ -8,8 +8,7 @@ import { NgIf } from '@angular/common';
   standalone: true,
   imports: [
     FormsModule,
-    NgIf,
-  ],
+    ],
   templateUrl: './quiz.component.html',
   styleUrls: ['./quiz.component.css'],
 })
@@ -21,10 +20,10 @@ export class QuizComponent {
   userAnswer: string = '';
   recognizedText: string = '';
   questionIndex: number = 0;
-  correctCount: number = 0; // Counter for correct answers
-  totalQuestions: number = 0; // Total number of questions
-  quizComplete: boolean = false; // Flag to indicate quiz completion
-  percentage: number = 0; // Percentage of correct answers
+  correctCount: number = 0;
+  totalQuestions: number = 0;
+  quizComplete: boolean = false;
+  percentage: number = 0;
 
   constructor(private http: HttpClient, private cdr: ChangeDetectorRef) {
     this.loadQuestions();
@@ -32,42 +31,62 @@ export class QuizComponent {
 
   loadQuestions() {
     this.http.get<{ question: string; answer: string }[]>('http://127.0.0.1:7990/api/question_answers').subscribe({
-      next: (data) => {
-        try {
-          console.log("Raw JSON Data:", data);
-  
-          if (!Array.isArray(data) || data.length === 0) {
-            throw new Error("No valid questions received.");
-          }
-  
-          this.questions = data.map(item => item.question.trim());
-          this.correctAnswers = data.map(item => item.answer.trim());
-          this.totalQuestions = this.questions.length;
-  
-          if (this.totalQuestions > 0) {
-            this.currentQuestion = this.questions[0];
-            this.correctAnswer = this.correctAnswers[0];
-          } else {
-            alert("No questions available.");
-          }
-        } catch (error) {
-          console.error("Error parsing JSON data:", error);
-          alert("Failed to parse questions. Please contact support.");
-        }
-      },
-      error: (error) => {
-        console.error("Error fetching questions:", error);
-        alert("Failed to load questions. Please try again.");
-      },
-    });
-  }    
+        next: (data) => {
+            try {
+                console.log("Raw JSON Data:", data);
 
-  speakQuestion() {
-    const utterance = new SpeechSynthesisUtterance(this.currentQuestion);
-    utterance.lang = 'en-US';
-    utterance.rate = 1;
-    utterance.pitch = 1;
-    speechSynthesis.speak(utterance);
+                if (!Array.isArray(data) || data.length === 0) {
+                    throw new Error("No valid questions received.");
+                }
+
+                this.questions = data.map(item => item.question.trim());
+                this.correctAnswers = data.map(item => item.answer.trim());
+                this.totalQuestions = this.questions.length;
+
+                if (this.totalQuestions > 0) {
+                    this.currentQuestion = this.questions[0];
+                    this.correctAnswer = this.correctAnswers[0];
+                    this.triggerTTS(); // Automatically play the first question
+                } else {
+                    alert("No questions available.");
+                }
+            } catch (error) {
+                console.error("Error parsing JSON data:", error);
+                alert("Failed to parse questions. Please contact support.");
+            }
+        },
+        error: (error) => {
+            console.error("Error fetching questions:", error);
+            alert("Failed to load questions. Please try again.");
+        },
+    });
+}    
+
+  triggerTTS() {
+    const payload = { text: this.currentQuestion };
+
+    // Make a POST request to the TTS streaming endpoint
+    this.http.post('http://127.0.0.1:7990/api/tts_stream', payload, { responseType: 'blob' })
+        .subscribe({
+            next: (audioBlob) => {
+                // Create a URL for the audio blob
+                const audioUrl = URL.createObjectURL(audioBlob);
+                const audio = new Audio(audioUrl);
+                audio.play(); // Play the audio
+            },
+            error: (error) => {
+                console.error('Error generating TTS:', error);
+                alert('Failed to generate audio for the question. Please try again.');
+            }
+        });
+      }
+
+  playAudio(audioUrl: string) {
+    const audio = new Audio(audioUrl);
+    audio.play().catch((error) => {
+      console.error('Error playing audio:', error);
+      alert('Failed to play the question audio. Please check your setup.');
+    });
   }
 
   submitAnswer() {
@@ -137,14 +156,15 @@ export class QuizComponent {
   loadNextQuestion() {
     this.questionIndex++;
     if (this.questionIndex < this.questions.length) {
-      this.currentQuestion = this.questions[this.questionIndex];
-      this.correctAnswer = this.correctAnswers[this.questionIndex];
-      this.userAnswer = '';
-      this.recognizedText = '';
+        this.currentQuestion = this.questions[this.questionIndex];
+        this.correctAnswer = this.correctAnswers[this.questionIndex];
+        this.userAnswer = '';
+        this.recognizedText = '';
+        this.triggerTTS(); // Automatically play the next question
     } else {
-      this.calculateResults();
+        this.calculateResults();
     }
-  }
+}
 
   calculateResults() {
     this.quizComplete = true;
