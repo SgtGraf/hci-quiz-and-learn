@@ -1,3 +1,26 @@
+.start-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-color: #f4f4f9;
+}
+
+.start-container button {
+  padding: 1rem 2rem;
+  font-size: 1.25rem;
+  border: none;
+  border-radius: 5px;
+  background-color: #007bff;
+  color: white;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.start-container button:hover {
+  background-color: #0056b3;
+}
+
 /* General body styling */
 body {
   font-family: 'Open Sans', sans-serif;

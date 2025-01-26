@@ -8,6 +8,7 @@ import { NgIf } from '@angular/common';
   standalone: true,
   imports: [
     FormsModule,
+    NgIf
     ],
   templateUrl: './quiz.component.html',
   styleUrls: ['./quiz.component.css'],
@@ -28,39 +29,53 @@ export class QuizComponent {
   constructor(private http: HttpClient, private cdr: ChangeDetectorRef) {
     this.loadQuestions();
   }
-
+  
+  started = false;
+  
   loadQuestions() {
-    this.http.get<{ question: string; answer: string }[]>('http://127.0.0.1:7990/api/question_answers').subscribe({
+    this.http
+      .get<{ question: string; answer: string }[]>(
+        'http://127.0.0.1:7990/api/question_answers'
+      )
+      .subscribe({
         next: (data) => {
-            try {
-                console.log("Raw JSON Data:", data);
-
-                if (!Array.isArray(data) || data.length === 0) {
-                    throw new Error("No valid questions received.");
-                }
-
-                this.questions = data.map(item => item.question.trim());
-                this.correctAnswers = data.map(item => item.answer.trim());
-                this.totalQuestions = this.questions.length;
-
-                if (this.totalQuestions > 0) {
-                    this.currentQuestion = this.questions[0];
-                    this.correctAnswer = this.correctAnswers[0];
-                    this.triggerTTS(); // Automatically play the first question
-                } else {
-                    alert("No questions available.");
-                }
-            } catch (error) {
-                console.error("Error parsing JSON data:", error);
-                alert("Failed to parse questions. Please contact support.");
+          try {
+            console.log('Raw JSON Data:', data);
+  
+            if (!Array.isArray(data) || data.length === 0) {
+              throw new Error('No valid questions received.');
             }
+  
+            this.questions = data.map((item) => item.question.trim());
+            this.correctAnswers = data.map((item) => item.answer.trim());
+            this.totalQuestions = this.questions.length;
+  
+            if (this.totalQuestions > 0) {
+              this.currentQuestion = this.questions[0];
+              this.correctAnswer = this.correctAnswers[0];
+            } else {
+              alert('No questions available.');
+            }
+          } catch (error) {
+            console.error('Error parsing JSON data:', error);
+            alert('Failed to parse questions. Please contact support.');
+          }
         },
         error: (error) => {
-            console.error("Error fetching questions:", error);
-            alert("Failed to load questions. Please try again.");
+          console.error('Error fetching questions:', error);
+          alert('Failed to load questions. Please try again.');
         },
-    });
-}    
+      });
+  }
+  
+  startQuiz() {
+    this.started = true;
+  
+    // Play the first question audio only after the quiz starts
+    if (this.currentQuestion) {
+      this.triggerTTS();
+    }
+  }
 
   triggerTTS() {
     const payload = { text: this.currentQuestion };
