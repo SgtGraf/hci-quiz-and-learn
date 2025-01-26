@@ -154,19 +154,19 @@ export class QuizComponent {
       alert('Please provide an answer before submitting.');
       return;
     }
-
+  
     // Payload
     const payload = {
       question: this.currentQuestion,
       user_answer: this.userAnswer,
       real_answer: this.correctAnswer,
     };
-
+  
     // Show the loading spinner
     this.loading = true;
     this.feedback = '';
     this.nextQuestionPending = false;
-
+  
     this.http
       .post('http://127.0.0.1:7990/api/evaluate_quiz', payload, {
         headers: new HttpHeaders({ 'Content-Type': 'application/json' }),
@@ -174,18 +174,21 @@ export class QuizComponent {
       .subscribe({
         next: (response: any) => {
           console.log('Evaluation Response:', response);
-
+  
           // Hide spinner and show feedback
           this.loading = false;
           this.feedback = response.evaluation;
-
+  
+          // Play the evaluation feedback
+          this.playFeedbackAudio(this.feedback);
+  
           // Increment correctCount if the answer is correct
           if (
             response.evaluation.toLowerCase().includes('your answer is correct')
           ) {
             this.correctCount++;
           }
-
+  
           // Mark that the next question is ready to be loaded
           this.nextQuestionPending = true;
         },
@@ -195,7 +198,33 @@ export class QuizComponent {
           this.feedback = 'Failed to submit your answer. Please try again.';
         },
       });
+  }  
+
+  playFeedbackAudio(feedbackText: string) {
+    if (!feedbackText) {
+      return;
     }
+  
+    const utterance = new SpeechSynthesisUtterance(feedbackText);
+    const voices = speechSynthesis.getVoices(); // Fetch available voices
+  
+    // Find a more natural-sounding voice (modify based on preference)
+    const preferredVoice = voices.find(
+      (voice) =>
+        voice.lang === 'en-US' && (voice.name.includes('Google') || voice.name.includes('Natural'))
+    );
+  
+    if (preferredVoice) {
+      utterance.voice = preferredVoice;
+    }
+  
+    utterance.lang = 'en-US';
+    utterance.rate = 1.3; // Adjust as needed
+    utterance.pitch = 2; // Adjust as needed
+  
+    speechSynthesis.cancel(); // Cancel any ongoing speech
+    speechSynthesis.speak(utterance);
+  }  
 
   closePopup() {
     // Hide the feedback popup
