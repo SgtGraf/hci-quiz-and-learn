@@ -1,0 +1,30 @@
+.quiz-container {
+    max-width: 600px;
+    margin: 20px auto;
+    padding: 20px;
+    background: white;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .quiz-container h2 {
+    color: #007bff;
+  }
+  
+  .quiz-container button {
+    margin-top: 10px;
+  }
+  
+  input {
+    display: block;
+    margin: 10px 0;
+    width: 100%;
+  }
+  
+  .recognition-output {
+    margin-top: 10px;
+    font-weight: bold;
+    color: #333;
+  }
+  
