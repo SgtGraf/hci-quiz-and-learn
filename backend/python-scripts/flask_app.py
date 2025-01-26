@@ -108,12 +108,16 @@ def tts_stream():
         return jsonify({"error": "No input text provided"}), 400
 
     try:
+        # Use the TTS streaming function
         return Response(
             stream_tts(input_text),
             mimetype="audio/mpeg",
             headers={
                 "Content-Disposition": "inline; filename=speech.mp3",
-                "Transfer-Encoding": "chunked"
+                "Transfer-Encoding": "chunked",
+                "Access-Control-Allow-Origin": "http://localhost:4200",
+                "Access-Control-Allow-Headers": "Content-Type",
+                "Access-Control-Allow-Methods": "POST"
             }
         )
     except Exception as e:

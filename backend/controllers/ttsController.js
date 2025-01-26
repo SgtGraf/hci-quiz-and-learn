@@ -21,7 +21,21 @@ exports.synthesizeSpeech = (req, res) => {
             return res.status(500).json({ error: 'Python script failed' });
         }
 
-        // If the script succeeds, just return a 200 response
-        res.status(200).json({ message: 'TTS generation succeeded' });
+        // Serve the generated speech file
+        const speechFilePath = path.join(__dirname, '../python-scripts/speech.mp3');
+        if (fs.existsSync(speechFilePath)) {
+            res.setHeader('Content-Type', 'audio/mpeg');
+            res.sendFile(speechFilePath, (err) => {
+                if (err) {
+                    console.error(`Error sending speech file: ${err}`);
+                    res.status(500).json({ error: 'Error sending speech file' });
+                } else {
+                    console.log('Speech file sent successfully.');
+                }
+            });
+        } else {
+            res.status(500).json({ error: 'Speech file not found' });
+        }
     });
 };
+

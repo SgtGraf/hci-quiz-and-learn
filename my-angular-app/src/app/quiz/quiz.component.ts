@@ -8,8 +8,8 @@ import { NgIf } from '@angular/common';
   standalone: true,
   imports: [
     FormsModule,
-    NgIf,
-  ],
+    NgIf
+    ],
   templateUrl: './quiz.component.html',
   styleUrls: ['./quiz.component.css'],
 })
@@ -21,54 +21,138 @@ export class QuizComponent {
   userAnswer: string = '';
   recognizedText: string = '';
   questionIndex: number = 0;
-  correctCount: number = 0; // Counter for correct answers
-  totalQuestions: number = 0; // Total number of questions
-  quizComplete: boolean = false; // Flag to indicate quiz completion
-  percentage: number = 0; // Percentage of correct answers
+  correctCount: number = 0;
+  totalQuestions: number = 0;
+  quizComplete: boolean = false;
+  percentage: number = 0;
 
   constructor(private http: HttpClient, private cdr: ChangeDetectorRef) {
     this.loadQuestions();
   }
-
+  
+  started = false;
+  
   loadQuestions() {
-    this.http.get<{ question: string; answer: string }[]>('http://127.0.0.1:7990/api/question_answers').subscribe({
-      next: (data) => {
-        try {
-          console.log("Raw JSON Data:", data);
+    this.http
+      .get<{ question: string; answer: string }[]>(
+        'http://127.0.0.1:7990/api/question_answers'
+      )
+      .subscribe({
+        next: (data) => {
+          try {
+            console.log('Raw JSON Data:', data);
   
-          if (!Array.isArray(data) || data.length === 0) {
-            throw new Error("No valid questions received.");
+            if (!Array.isArray(data) || data.length === 0) {
+              throw new Error('No valid questions received.');
+            }
+  
+            this.questions = data.map((item) => item.question.trim());
+            this.correctAnswers = data.map((item) => item.answer.trim());
+            this.totalQuestions = this.questions.length;
+  
+            if (this.totalQuestions > 0) {
+              this.currentQuestion = this.questions[0];
+              this.correctAnswer = this.correctAnswers[0];
+            } else {
+              alert('No questions available.');
+            }
+          } catch (error) {
+            console.error('Error parsing JSON data:', error);
+            alert('Failed to parse questions. Please contact support.');
           }
+        },
+        error: (error) => {
+          console.error('Error fetching questions:', error);
+          alert('Failed to load questions. Please try again.');
+        },
+      });
+  }
   
-          this.questions = data.map(item => item.question.trim());
-          this.correctAnswers = data.map(item => item.answer.trim());
-          this.totalQuestions = this.questions.length;
+  startQuiz() {
+    this.started = true;
   
-          if (this.totalQuestions > 0) {
-            this.currentQuestion = this.questions[0];
-            this.correctAnswer = this.correctAnswers[0];
-          } else {
-            alert("No questions available.");
-          }
-        } catch (error) {
-          console.error("Error parsing JSON data:", error);
-          alert("Failed to parse questions. Please contact support.");
-        }
-      },
-      error: (error) => {
-        console.error("Error fetching questions:", error);
-        alert("Failed to load questions. Please try again.");
-      },
+    // Play the first question audio only after the quiz starts
+    if (this.currentQuestion) {
+      this.triggerTTS();
+    }
+  }
+
+  triggerTTS() {
+    const payload = { text: this.currentQuestion };
+
+    // Make a POST request to the TTS streaming endpoint
+    this.http.post('http://127.0.0.1:7990/api/tts_stream', payload, { responseType: 'blob' })
+        .subscribe({
+            next: (audioBlob) => {
+                // Create a URL for the audio blob
+                const audioUrl = URL.createObjectURL(audioBlob);
+                const audio = new Audio(audioUrl);
+                audio.play(); // Play the audio
+            },
+            error: (error) => {
+                console.error('Error generating TTS:', error);
+                alert('Failed to generate audio for the question. Please try again.');
+            }
+        });
+      }
+
+  playAudio(audioUrl: string) {
+    const audio = new Audio(audioUrl);
+    audio.play().catch((error) => {
+      console.error('Error playing audio:', error);
+      alert('Failed to play the question audio. Please check your setup.');
+    });
+  }
+
+  isSpeaking = false;
+
+  startSpeechRecognition() {
+    const SpeechRecognition =
+      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+  
+    if (!SpeechRecognition) {
+      alert('Speech recognition is not supported in this browser.');
+      return;
+    }
+  
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'en-US';
+    recognition.interimResults = false;
+  
+    recognition.onstart = () => {
+      this.isSpeaking = true;
+      this.cdr.detectChanges(); // Notify Angular to update the UI
+    };
+  
+    recognition.onresult = (event: any) => {
+      const spokenText = event.results[0][0].transcript;
+      console.log('Recognized Speech:', spokenText);
+      this.userAnswer = spokenText; // Update the userAnswer field
+      this.cdr.detectChanges();
+    };
+  
+    recognition.onend = () => {
+      this.isSpeaking = false;
+      this.cdr.detectChanges();
+    };
+  
+    recognition.onerror = (error: any) => {
+      console.error('Speech recognition error:', error);
+      alert('Speech recognition failed. Please try again.');
+      this.isSpeaking = false;
+      this.cdr.detectChanges();
+    };
+  
+    recognition.start();
+  }  
+  
+  updateSpeechIndicator(lineHeight: number) {
+    const lines = document.querySelectorAll('.line');
+    lines.forEach((line, index) => {
+      const height = Math.random() * lineHeight + 10; // Add randomness for a natural look
+      (line as HTMLElement).style.height = `${height}px`;
     });
   }    
-
-  speakQuestion() {
-    const utterance = new SpeechSynthesisUtterance(this.currentQuestion);
-    utterance.lang = 'en-US';
-    utterance.rate = 1;
-    utterance.pitch = 1;
-    speechSynthesis.speak(utterance);
-  }
 
   submitAnswer() {
     if (!this.currentQuestion || !this.userAnswer) {
@@ -104,47 +188,18 @@ export class QuizComponent {
     });
   }  
 
-  startSpeechRecognition() {
-    const SpeechRecognition =
-      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-
-    if (!SpeechRecognition) {
-      alert("Speech recognition is not supported in this browser.");
-      return;
-    }
-
-    const recognition = new SpeechRecognition();
-    recognition.lang = "en-US";
-    recognition.interimResults = false;
-
-    recognition.onresult = (event: any) => {
-      const spokenText = event.results[0][0].transcript;
-      console.log("Recognized Speech:", spokenText);
-      this.userAnswer = spokenText; // Update the userAnswer field
-
-      // Notify Angular to detect changes
-      this.cdr.detectChanges();
-    };
-
-    recognition.onerror = (error: any) => {
-      console.error("Speech recognition error:", error);
-      alert("Speech recognition failed. Please try again.");
-    };
-
-    recognition.start();
-  }
-
   loadNextQuestion() {
     this.questionIndex++;
     if (this.questionIndex < this.questions.length) {
-      this.currentQuestion = this.questions[this.questionIndex];
-      this.correctAnswer = this.correctAnswers[this.questionIndex];
-      this.userAnswer = '';
-      this.recognizedText = '';
+        this.currentQuestion = this.questions[this.questionIndex];
+        this.correctAnswer = this.correctAnswers[this.questionIndex];
+        this.userAnswer = '';
+        this.recognizedText = '';
+        this.triggerTTS(); // Automatically play the next question
     } else {
-      this.calculateResults();
+        this.calculateResults();
     }
-  }
+}
 
   calculateResults() {
     this.quizComplete = true;
