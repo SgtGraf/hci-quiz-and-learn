@@ -24,6 +24,8 @@ except Exception as e:
     print(f"An error occurred: {e}")
 
 def get_question_answers():
+    if not question_answer:
+        return jsonify({"error": "No questions available"}), 400
     # Convert the dictionary to a list of objects
     formatted_data = [{"question": question, "answer": answer} for question, answer in question_answer.items()]
     return jsonify(formatted_data)

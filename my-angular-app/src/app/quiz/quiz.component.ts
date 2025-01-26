@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectorRef } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { NgIf } from '@angular/common';
@@ -8,7 +8,7 @@ import { NgIf } from '@angular/common';
   standalone: true,
   imports: [
     FormsModule,
-    NgIf
+    NgIf,
   ],
   templateUrl: './quiz.component.html',
   styleUrls: ['./quiz.component.css'],
@@ -26,35 +26,29 @@ export class QuizComponent {
   quizComplete: boolean = false; // Flag to indicate quiz completion
   percentage: number = 0; // Percentage of correct answers
 
-  constructor(private http: HttpClient) {
+  constructor(private http: HttpClient, private cdr: ChangeDetectorRef) {
     this.loadQuestions();
   }
 
   loadQuestions() {
-    this.http.get<{ [key: string]: string }>('http://127.0.0.1:7990/api/question_answers').subscribe({
+    this.http.get<{ question: string; answer: string }[]>('http://127.0.0.1:7990/api/question_answers').subscribe({
       next: (data) => {
         try {
           console.log("Raw JSON Data:", data);
-
-          // Convert the dictionary to an array of question-answer objects
-          const parsedData = Object.entries(data).map(([question, answer]) => ({
-            question: question.trim(),
-            answer: answer.trim()
-          }));
-
-          console.log("Parsed Data:", parsedData);
-
-          // Map parsed data to questions and answers
-          this.questions = parsedData.map(q => q.question);
-          this.correctAnswers = parsedData.map(q => q.answer);
+  
+          if (!Array.isArray(data) || data.length === 0) {
+            throw new Error("No valid questions received.");
+          }
+  
+          this.questions = data.map(item => item.question.trim());
+          this.correctAnswers = data.map(item => item.answer.trim());
           this.totalQuestions = this.questions.length;
-
-          // Set the first question and answer
-          if (this.questions.length > 0) {
+  
+          if (this.totalQuestions > 0) {
             this.currentQuestion = this.questions[0];
             this.correctAnswer = this.correctAnswers[0];
           } else {
-            alert("No questions found in the data.");
+            alert("No questions available.");
           }
         } catch (error) {
           console.error("Error parsing JSON data:", error);
@@ -64,9 +58,9 @@ export class QuizComponent {
       error: (error) => {
         console.error("Error fetching questions:", error);
         alert("Failed to load questions. Please try again.");
-      }
+      },
     });
-  }
+  }    
 
   speakQuestion() {
     const utterance = new SpeechSynthesisUtterance(this.currentQuestion);
@@ -81,34 +75,34 @@ export class QuizComponent {
       alert("Please provide an answer before submitting.");
       return;
     }
-
+  
     // Payload
     const payload = {
       question: this.currentQuestion,
       user_answer: this.userAnswer,
-      real_answer: this.correctAnswer
+      real_answer: this.correctAnswer,
     };
-
+  
     this.http.post('http://127.0.0.1:7990/api/evaluate_quiz', payload, {
-      headers: new HttpHeaders({ 'Content-Type': 'application/json' })
+      headers: new HttpHeaders({ 'Content-Type': 'application/json' }),
     }).subscribe({
       next: (response: any) => {
         console.log("Evaluation Response:", response);
         alert(response.evaluation); // Display feedback
-
-        // Check if the response indicates a correct answer
-        if (response.evaluation.toLowerCase().includes('correct')) {
+  
+        // Only increment correctCount if the evaluation clearly states the answer is correct
+        if (response.evaluation.toLowerCase().includes('your answer is correct')) {
           this.correctCount++;
         }
-
+  
         this.loadNextQuestion();
       },
       error: (error) => {
         console.error("Error submitting answer:", error);
         alert("Failed to submit your answer. Please try again.");
-      }
+      },
     });
-  }
+  }  
 
   startSpeechRecognition() {
     const SpeechRecognition =
@@ -126,7 +120,10 @@ export class QuizComponent {
     recognition.onresult = (event: any) => {
       const spokenText = event.results[0][0].transcript;
       console.log("Recognized Speech:", spokenText);
-      this.userAnswer = spokenText; // Populate the answer field
+      this.userAnswer = spokenText; // Update the userAnswer field
+
+      // Notify Angular to detect changes
+      this.cdr.detectChanges();
     };
 
     recognition.onerror = (error: any) => {

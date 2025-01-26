@@ -2,8 +2,7 @@
 <div *ngIf="currentQuestion">
   <h2>{{ currentQuestion }}</h2>
   <button (click)="speakQuestion()">Hear Question</button>
-  <input [(ngModel)]="userAnswer" placeholder="Type or Speak your answer">
+  <input type="text" [(ngModel)]="userAnswer" placeholder="Type or Speak your answer">
   <button (click)="submitAnswer()">Submit</button>
   <button (click)="startSpeechRecognition()">Speak Answer</button>
 </div>
-<p class="recognition-output">Recognized Text: {{ recognizedText }}</p>
