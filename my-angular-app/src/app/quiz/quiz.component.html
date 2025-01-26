@@ -29,5 +29,11 @@
       <button (click)="submitAnswer()">Submit</button>
       <button (click)="startSpeechRecognition()">Speak Answer</button>
     </div>
+
+    <!-- Speech Indicator -->
+    <div class="speech-indicator" *ngIf="isSpeaking">
+      <div class="pulse"></div>
+      <p>Listening...</p>
+    </div>        
   </div>
 </div>

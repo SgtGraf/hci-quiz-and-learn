@@ -104,6 +104,56 @@ export class QuizComponent {
     });
   }
 
+  isSpeaking = false;
+
+  startSpeechRecognition() {
+    const SpeechRecognition =
+      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+  
+    if (!SpeechRecognition) {
+      alert('Speech recognition is not supported in this browser.');
+      return;
+    }
+  
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'en-US';
+    recognition.interimResults = false;
+  
+    recognition.onstart = () => {
+      this.isSpeaking = true;
+      this.cdr.detectChanges(); // Notify Angular to update the UI
+    };
+  
+    recognition.onresult = (event: any) => {
+      const spokenText = event.results[0][0].transcript;
+      console.log('Recognized Speech:', spokenText);
+      this.userAnswer = spokenText; // Update the userAnswer field
+      this.cdr.detectChanges();
+    };
+  
+    recognition.onend = () => {
+      this.isSpeaking = false;
+      this.cdr.detectChanges();
+    };
+  
+    recognition.onerror = (error: any) => {
+      console.error('Speech recognition error:', error);
+      alert('Speech recognition failed. Please try again.');
+      this.isSpeaking = false;
+      this.cdr.detectChanges();
+    };
+  
+    recognition.start();
+  }  
+  
+  updateSpeechIndicator(lineHeight: number) {
+    const lines = document.querySelectorAll('.line');
+    lines.forEach((line, index) => {
+      const height = Math.random() * lineHeight + 10; // Add randomness for a natural look
+      (line as HTMLElement).style.height = `${height}px`;
+    });
+  }    
+
   submitAnswer() {
     if (!this.currentQuestion || !this.userAnswer) {
       alert("Please provide an answer before submitting.");
@@ -137,36 +187,6 @@ export class QuizComponent {
       },
     });
   }  
-
-  startSpeechRecognition() {
-    const SpeechRecognition =
-      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-
-    if (!SpeechRecognition) {
-      alert("Speech recognition is not supported in this browser.");
-      return;
-    }
-
-    const recognition = new SpeechRecognition();
-    recognition.lang = "en-US";
-    recognition.interimResults = false;
-
-    recognition.onresult = (event: any) => {
-      const spokenText = event.results[0][0].transcript;
-      console.log("Recognized Speech:", spokenText);
-      this.userAnswer = spokenText; // Update the userAnswer field
-
-      // Notify Angular to detect changes
-      this.cdr.detectChanges();
-    };
-
-    recognition.onerror = (error: any) => {
-      console.error("Speech recognition error:", error);
-      alert("Speech recognition failed. Please try again.");
-    };
-
-    recognition.start();
-  }
 
   loadNextQuestion() {
     this.questionIndex++;

@@ -106,3 +106,40 @@ input[type='text']:focus {
   width: 50%; /* Dynamically update this based on progress */
   border-radius: 10px;
 }
+
+.speech-indicator {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 20px;
+}
+
+.speech-indicator .pulse {
+  width: 30px;
+  height: 30px;
+  background-color: #007bff; /* Blue color for visibility */
+  border-radius: 50%;
+  animation: pulse 0.8s infinite; /* Smooth pulsing effect */
+}
+
+.speech-indicator p {
+  margin-top: 10px;
+  font-size: 14px;
+  color: #007bff;
+}
+
+/* Pulsing Animation */
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.5);
+    opacity: 0.6;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
