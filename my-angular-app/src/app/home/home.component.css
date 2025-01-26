@@ -1,0 +1,23 @@
+h1 {
+    text-align: center;
+    color: #007bff;
+  }
+  
+  button {
+    display: block;
+    margin: 10px auto;
+  }
+  
+  .questions-list {
+    list-style-type: none;
+    padding: 0;
+  }
+  
+  .questions-list li {
+    background: #f1f1f1;
+    padding: 10px;
+    margin: 5px 0;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+  }
+  

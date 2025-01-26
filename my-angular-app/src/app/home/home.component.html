@@ -1,0 +1,16 @@
+<h1>Home</h1>
+<button (click)="fetchQuestions()">Show Questions</button>
+<div *ngIf="questions.length">
+  <h3>Questions:</h3>
+  <ul>
+    <li *ngFor="let question of questions">{{ question }}</li>
+  </ul>
+</div>
+
+<h3>Speech Recognition</h3>
+<button (click)="startSpeechRecognition()">Start Speaking</button>
+<p>{{ recognizedText }}</p>
+
+<h3>Speech Synthesis</h3>
+<input [(ngModel)]="textToSpeak" placeholder="Enter text to speak">
+<button (click)="synthesizeSpeech()">Speak</button>
