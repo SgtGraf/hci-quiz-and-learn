@@ -60,17 +60,30 @@ def evaluate_quiz_question(question, user_answer, real_answer):
 
 
 # Flask Endpoints
+@app.route('/api/quizzes', methods=['GET'])
+def get_quizzes():
+    return question.get_quizzes()
+
 @app.route('/api/question_answers', methods=['GET'])
 def get_question_answers():
-    return question.get_question_answers()
+    quiz = request.args.get('quiz') 
+    if quiz is None:
+        return question.get_questions()
+    return question.get_question_answers(quiz)
 
 @app.route('/api/questions', methods=['GET'])
 def get_questions():
-    return question.get_questions()
+    quiz = request.args.get('quiz')
+    if quiz is None:
+        return question.get_questions()
+    return question.get_questions(quiz)
 
 @app.route('/api/answers', methods=['GET'])
 def get_answers():
-    return question.get_answers()
+    quiz = request.args.get('quiz') 
+    if quiz is None:
+        return question.get_questions()
+    return question.get_answers(quiz)
 
 
 # Audio Transcription Endpoint

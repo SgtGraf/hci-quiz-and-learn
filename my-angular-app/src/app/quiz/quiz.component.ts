@@ -38,7 +38,7 @@ export class QuizComponent {
   loadQuestions() {
     this.http
       .get<{ question: string; answer: string }[]>(
-        'http://127.0.0.1:7990/api/question_answers'
+        'http://127.0.0.1:7990/api/question_answers?quiz=IT'
       )
       .subscribe({
         next: (data) => {
