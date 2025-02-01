@@ -1,19 +1,21 @@
-import { Component, ChangeDetectorRef } from '@angular/core';
+import { Component, ChangeDetectorRef, OnInit } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { NgIf } from '@angular/common';
+import { ActivatedRoute } from '@angular/router';
 
 @Component({
   selector: 'app-quiz',
   standalone: true,
   imports: [
     FormsModule,
-    NgIf
+    NgIf,
     ],
   templateUrl: './quiz.component.html',
   styleUrls: ['./quiz.component.css'],
 })
 export class QuizComponent {
+  quizId: string = '';
   questions: string[] = [];
   correctAnswers: string[] = [];
   currentQuestion: string = '';
@@ -35,15 +37,27 @@ export class QuizComponent {
   // Tooltip visibility
   showTooltip: boolean = false;
 
-  constructor(private http: HttpClient, private cdr: ChangeDetectorRef) {
-    this.loadQuestions();
+  constructor(private route: ActivatedRoute, private http: HttpClient, private cdr: ChangeDetectorRef) {
+  }
+
+  ngOnInit() {
+    // Wait for the route parameters to initialize before calling loadQuestions
+    this.route.params.subscribe((params) => {
+      this.quizId = params['id']; // Extract quiz ID from the URL
+      if (this.quizId) {
+        this.loadQuestions(); // Call loadQuestions only after quizId is set
+      } else {
+        console.error('Quiz ID not found in route parameters.');
+        alert('Invalid quiz ID. Please try again.');
+      }
+    });
   }
 
   loadQuestions() {
+    const apiUrl = `http://127.0.0.1:7990/api/question_answers?quiz=${this.quizId}`;
+
     this.http
-      .get<{ question: string; answer: string }[]>(
-        'http://127.0.0.1:7990/api/question_answers?quiz=IT'
-      )
+      .get<{ question: string; answer: string }[]>(apiUrl)
       .subscribe({
         next: (data) => {
           try {
@@ -71,7 +85,6 @@ export class QuizComponent {
         },
         error: (error) => {
           console.error('Error fetching questions:', error);
-          alert('Failed to load questions. Please try again.');
         },
       });
   }
