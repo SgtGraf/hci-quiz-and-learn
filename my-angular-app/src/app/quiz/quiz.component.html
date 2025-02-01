@@ -10,12 +10,17 @@
 <!-- Quiz Content -->
 <div *ngIf="started">
   <div class="quiz-container">
+    <!-- Progress Bar -->
     <div class="progress-bar">
       <div
         class="progress-bar-inner"
         [style.width]="(questionIndex / totalQuestions) * 100 + '%'"
       ></div>
+      <div class="progress-text">
+        {{ questionIndex + 1 }} of {{ totalQuestions }}
+      </div>
     </div>
+
 
     <div class="question-text">{{ currentQuestion }}</div>
 
