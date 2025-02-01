@@ -30,6 +30,14 @@
       <button (click)="startSpeechRecognition()">Speak Answer</button>
     </div>
 
+    <!-- Floating Action Button -->
+    <div class="floating-action-btn" (mouseenter)="showTooltip = true" (mouseleave)="showTooltip = false">
+      <button (click)="triggerTTS()" class="replay-btn">
+        <i class="material-icons">replay</i>
+      </button>
+      <span class="tooltip" *ngIf="showTooltip">Replay Question</span>
+    </div>
+
     <!-- Speech Indicator -->
     <div class="speech-indicator" *ngIf="isSpeaking">
       <div class="pulse"></div>
