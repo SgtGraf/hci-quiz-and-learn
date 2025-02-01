@@ -211,3 +211,58 @@ input[type='text']:focus {
 .feedback button:hover {
   background-color: #0056b3;
 }
+
+/* Floating Action Button */
+.floating-action-btn {
+  position: fixed;
+  top: 12rem;
+  right: 2rem;
+  display: flex;
+  flex-direction: row-reverse;
+  align-items: center;
+}
+
+.replay-btn {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 60px;
+  height: 60px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.replay-btn:hover {
+  background-color: #0056b3;
+  transform: scale(1.1);
+}
+
+.replay-btn i.material-icons {
+  font-size: 24px;
+}
+
+.tooltip {
+  margin-top: 0.5rem;
+  background-color: #333;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 5px;
+  font-size: 0.875rem;
+  white-space: nowrap;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}

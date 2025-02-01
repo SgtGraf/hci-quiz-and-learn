@@ -29,12 +29,15 @@ export class QuizComponent {
   feedback: string = ''; // To display the evaluation feedback
   nextQuestionPending: boolean = false;
   fillerAudioUrl: string = ''; // Stores preloaded filler phrase
+  isSpeaking = false;
+  started = false;
+
+  // Tooltip visibility
+  showTooltip: boolean = false;
 
   constructor(private http: HttpClient, private cdr: ChangeDetectorRef) {
     this.loadQuestions();
   }
-
-  started = false;
 
   loadQuestions() {
     this.http
@@ -96,6 +99,11 @@ export class QuizComponent {
   }
 
   triggerTTS() {
+    if (!this.currentQuestion) {
+      alert('No question available to replay.');
+      return;
+    }
+
     const payload = { text: this.currentQuestion };
 
     this.http.post('http://127.0.0.1:7990/api/tts_stream', payload, { responseType: 'blob' })
@@ -111,8 +119,6 @@ export class QuizComponent {
         }
       });
   }
-
-  isSpeaking = false;
 
   startSpeechRecognition() {
     const SpeechRecognition =
