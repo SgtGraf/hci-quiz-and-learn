@@ -28,7 +28,8 @@ def stream_tts(input_text):
         response = client.audio.speech.create(
             model="tts-1",
             voice="alloy",
-            input=input_text
+            input=input_text,
+            response_format="opus"  # opus for lower latency
         )
         for chunk in response.iter_bytes():
             yield chunk
@@ -42,11 +43,15 @@ def evaluate_quiz_question(question, user_answer, real_answer):
 
     try:
         completion = client.chat.completions.create(
-            model="gpt-4",
+            model="gpt-4o-mini",
             messages=[
                 {
                     "role": "system",
-                    "content": "You are an assistant tasked with evaluating user answers to quiz questions. The Real Answer is the solution provided by the quiz, stick to that. Provide feedback comparing the user's answer to the correct answer. Talk directly to the user and straight to the point. Keep it as short as possible."
+                    "content": "You are an assistant tasked with evaluating user answers to quiz questions. "
+                               "The Real Answer is the solution provided by the quiz, stick to that. "
+                               "Provide feedback comparing the user's answer to the correct answer. "
+                               "Talk directly to the user and keep it short."
+                               "Don't offer help or more information"
                 },
                 {
                     "role": "user",
@@ -59,7 +64,27 @@ def evaluate_quiz_question(question, user_answer, real_answer):
         raise RuntimeError(f"Quiz evaluation failed: {e}")
 
 
-# Flask Endpoints
+# generate Filler Phrase with ChatGPT
+def generate_filler_phrase():
+    client = OpenAI(api_key=api_key)
+
+    try:
+        completion = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {
+                    "role": "system",
+                    "content": "Generate a short filler phrase before evaluating a quiz answer. "
+                               "Keep it under 5 words. Example: 'Let me think about that'."
+                }
+            ]
+        )
+        return completion.choices[0].message.content.strip()
+    except Exception as e:
+        raise RuntimeError(f"Filler phrase generation failed: {e}")
+
+
+# API: Fetch Quiz Questions and Answers
 @app.route('/api/quizzes', methods=['GET'])
 def get_quizzes():
     return question.get_quizzes()
@@ -121,20 +146,36 @@ def tts_stream():
         return jsonify({"error": "No input text provided"}), 400
 
     try:
-        # Use the TTS streaming function
         return Response(
             stream_tts(input_text),
-            mimetype="audio/mpeg",
+            mimetype="audio/ogg",
             headers={
-                "Content-Disposition": "inline; filename=speech.mp3",
+                "Content-Disposition": "inline; filename=speech.ogg",
                 "Transfer-Encoding": "chunked",
-                "Access-Control-Allow-Origin": "http://localhost:4200",
-                "Access-Control-Allow-Headers": "Content-Type",
-                "Access-Control-Allow-Methods": "POST"
+                "Access-Control-Allow-Origin": "http://localhost:4200"
             }
         )
     except Exception as e:
         return jsonify({"error": f"TTS generation failed: {e}"}), 500
+
+
+# API: Filler TTS Streaming (Preloaded Filler Phrase)
+@app.route('/api/filler_tts', methods=['GET'])
+def filler_tts():
+    try:
+        filler_phrase = generate_filler_phrase()
+
+        return Response(
+            stream_tts(filler_phrase),
+            mimetype="audio/ogg",  #
+            headers={
+                "Content-Disposition": "inline; filename=filler.ogg",
+                "Transfer-Encoding": "chunked",
+                "Access-Control-Allow-Origin": "http://localhost:4200"
+            }
+        )
+    except Exception as e:
+        return jsonify({"error": f"Filler TTS generation failed: {e}"}), 500
 
 
 # Chat Evaluation Endpoint
