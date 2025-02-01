@@ -1,0 +1,12 @@
+<div class="quizzes-page">
+  <h2>Select a Quiz</h2>
+  <div class="quizzes-grid">
+    <div
+      class="quiz-card"
+      *ngFor="let quiz of quizzes"
+      (click)="navigateToQuiz(quiz.id)"
+    >
+      <h3>{{ quiz.name }}</h3>
+    </div>
+  </div>
+</div>
