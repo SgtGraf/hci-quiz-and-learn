@@ -24,11 +24,10 @@
 
     <div class="question-text">{{ currentQuestion }}</div>
 
-    <input
-      type="text"
+    <textarea
       [(ngModel)]="userAnswer"
       placeholder="Type your answer here"
-    />
+    ></textarea>
 
     <div>
       <button (click)="submitAnswer()">Submit</button>

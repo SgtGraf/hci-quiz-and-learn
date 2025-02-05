@@ -21,7 +21,6 @@
   background-color: #0056b3;
 }
 
-/* General body styling */
 body {
   font-family: 'Open Sans', sans-serif;
   background-color: #f4f4f9;
@@ -30,7 +29,6 @@ body {
   padding: 0;
 }
 
-/* Header */
 header {
   background-color: #007bff;
   color: white;
@@ -39,7 +37,6 @@ header {
   font-size: 1.2rem;
 }
 
-/* Quiz container */
 .quiz-container {
   max-width: 600px;
   margin: 2rem auto;
@@ -50,7 +47,6 @@ header {
   text-align: center;
 }
 
-/* Question text */
 .question-text {
   font-size: 1.25rem;
   font-weight: bold;
@@ -78,16 +74,19 @@ button:disabled {
   cursor: not-allowed;
 }
 
-/* Input fields */
-input[type='text'] {
+/* Text Area */
+textarea {  
   padding: 0.5rem;
   width: 80%;
+  height: 100px;
+  overflow: auto;
   margin: 1rem 0;
   border: 1px solid #ccc;
   border-radius: 5px;
+  resize: none;
 }
 
-input[type='text']:focus {
+textarea:focus {
   outline: none;
   border-color: #007bff;
 }
@@ -122,6 +121,7 @@ input[type='text']:focus {
   pointer-events: none;
 }
 
+/*Speech Indicator */
 .speech-indicator {
   display: flex;
   flex-direction: column;
@@ -132,9 +132,9 @@ input[type='text']:focus {
 .speech-indicator .pulse {
   width: 30px;
   height: 30px;
-  background-color: #007bff; /* Blue color for visibility */
+  background-color: #007bff;
   border-radius: 50%;
-  animation: pulse 0.8s infinite; /* Smooth pulsing effect */
+  animation: pulse 0.8s infinite;
 }
 
 .speech-indicator p {
@@ -159,7 +159,7 @@ input[type='text']:focus {
   }
 }
 
-/* Popup Modal Styling */
+/* Popup Modal */
 .popup {
   position: fixed;
   top: 0;
