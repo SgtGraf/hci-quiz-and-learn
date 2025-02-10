@@ -10,6 +10,14 @@
 <!-- Quiz Content -->
 <div *ngIf="started">
   <div class="quiz-container">
+    <!-- Toggle Button for Filler -->
+    <div class="toggle-container">
+      <label class="switch">
+        <input type="checkbox" (change)="toggleFiller()" [checked]="useFiller">
+        <span class="slider round"></span>
+      </label>
+      <span>Filler</span>
+    </div>
     <!-- Progress Bar -->
     <div class="progress-bar">
       <div
