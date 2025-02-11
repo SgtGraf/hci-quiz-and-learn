@@ -21,6 +21,7 @@ export class QuizComponent {
   currentQuestion: string = '';
   correctAnswer: string = '';
   userAnswer: string = '';
+  answerFile: string = '';
   recognizedText: string = '';
   questionIndex: number = 0;
   correctCount: number = 0;
@@ -46,6 +47,7 @@ export class QuizComponent {
       this.quizId = params['id']; // Extract quiz ID from the URL
       if (this.quizId) {
         this.loadQuestions(); // Call loadQuestions only after quizId is set
+        this.answerFile = `${this.quizId}_answer.csv`;
       } else {
         console.error('Quiz ID not found in route parameters.');
         alert('Invalid quiz ID. Please try again.');
@@ -189,6 +191,7 @@ export class QuizComponent {
         question: this.currentQuestion,
         user_answer: this.userAnswer,
         real_answer: this.correctAnswer,
+        answer_file: this.answerFile,
       };
 
       this.http
@@ -275,7 +278,25 @@ export class QuizComponent {
 
   calculateResults() {
     this.quizComplete = true;
-    this.percentage = Math.round((this.correctCount / this.totalQuestions) * 100);
-    alert("Quiz complete! You answered ${this.correctCount} out of ${this.totalQuestions} questions correctly (${this.percentage}%).");
+    var user_points = 0
+    var total_points = 0
+
+    const payload = { file: this.answerFile };
+
+    this.http.post('http://127.0.0.1:7990/api/get_points', payload, {
+      headers: new HttpHeaders({ 'Content-Type': 'application/json' }),
+    })
+      .subscribe({
+        next: (response: any) => {
+            user_points = parseInt(response.user_points, 10);
+            total_points = parseInt(response.total_points, 10);
+            this.percentage = Math.round((user_points / total_points) * 100);
+            alert(`Quiz complete! You reached ${user_points} out of ${total_points} points correctly (${this.percentage}%).`);
+        },
+        error: (error) => {
+          console.error('Error generating TTS:', error);
+          alert('Failed to generate audio for feedback.');
+        }
+      });
   }
 }
