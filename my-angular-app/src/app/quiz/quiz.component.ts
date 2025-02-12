@@ -31,6 +31,7 @@ export class QuizComponent {
   loading: boolean = false; // To control the spinner visibility
   feedback: string = ''; // To display the evaluation feedback
   nextQuestionPending: boolean = false;
+  useFiller: boolean = true;
   fillerAudioUrl: string = ''; // Stores preloaded filler phrase
   isSpeaking = false;
   started = false;
@@ -111,6 +112,10 @@ export class QuizComponent {
     if (this.currentQuestion) {
       this.triggerTTS();
     }
+  }
+
+  toggleFiller() {
+    this.useFiller = !this.useFiller;
   }
 
   triggerTTS() {
@@ -224,7 +229,7 @@ export class QuizComponent {
   }
 
   playFillerAudio(callback: () => void) {
-    if (this.fillerAudioUrl) {
+    if (this.fillerAudioUrl && this.useFiller) {
       const audio = new Audio(this.fillerAudioUrl);
       audio.onended = callback;
       audio.play();
