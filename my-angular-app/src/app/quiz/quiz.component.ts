@@ -3,6 +3,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { NgIf } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-quiz',
@@ -21,6 +22,7 @@ export class QuizComponent {
   currentQuestion: string = '';
   correctAnswer: string = '';
   userAnswer: string = '';
+  answerFile: string = '';
   recognizedText: string = '';
   questionIndex: number = 0;
   correctCount: number = 0;
@@ -34,11 +36,12 @@ export class QuizComponent {
   fillerAudioUrl: string = ''; // Stores preloaded filler phrase
   isSpeaking = false;
   started = false;
+  finished: boolean = false;
 
   // Tooltip visibility
   showTooltip: boolean = false;
 
-  constructor(private route: ActivatedRoute, private http: HttpClient, private cdr: ChangeDetectorRef) {
+  constructor(private route: ActivatedRoute, private http: HttpClient, private cdr: ChangeDetectorRef, private router: Router) {
   }
 
   ngOnInit() {
@@ -47,6 +50,7 @@ export class QuizComponent {
       this.quizId = params['id']; // Extract quiz ID from the URL
       if (this.quizId) {
         this.loadQuestions(); // Call loadQuestions only after quizId is set
+        this.answerFile = `${this.quizId}_answer.csv`;
       } else {
         console.error('Quiz ID not found in route parameters.');
         alert('Invalid quiz ID. Please try again.');
@@ -194,6 +198,7 @@ export class QuizComponent {
         question: this.currentQuestion,
         user_answer: this.userAnswer,
         real_answer: this.correctAnswer,
+        answer_file: this.answerFile,
       };
 
       this.http
@@ -209,10 +214,6 @@ export class QuizComponent {
 
             // Play the evaluation feedback via TTS
             this.playFeedbackAudio(response.evaluation);
-
-            if (response.evaluation.toLowerCase().includes('your answer is correct')) {
-              this.correctCount++;
-            }
 
             this.nextQuestionPending = true;
           },
@@ -274,13 +275,34 @@ export class QuizComponent {
       this.preloadFillerAudio(); // Preload filler for next question
       this.triggerTTS();
     } else {
+      this.finished = true;
       this.calculateResults();
     }
   }
 
   calculateResults() {
     this.quizComplete = true;
-    this.percentage = Math.round((this.correctCount / this.totalQuestions) * 100);
-    alert("Quiz complete! You answered ${this.correctCount} out of ${this.totalQuestions} questions correctly (${this.percentage}%).");
+
+    const payload = { file: this.answerFile };
+
+    this.http.post('http://127.0.0.1:7990/api/get_points', payload, {
+      headers: new HttpHeaders({ 'Content-Type': 'application/json' }),
+    })
+      .subscribe({
+        next: (response: any) => {
+            const user_points = parseInt(response.user_points, 10);
+            const total_points = parseInt(response.total_points, 10);
+            this.feedback = `Your score: ${ user_points } / ${ total_points }`;
+            this.playFeedbackAudio(`Quiz completed! ${this.feedback}`);
+        },
+        error: (error) => {
+          console.error('Error generating TTS:', error);
+          alert('Failed to generate audio for feedback.');
+        }
+      });
+  }
+
+  navigateToQuizzes() {
+    this.router.navigate(['/quizzes']);
   }
 }

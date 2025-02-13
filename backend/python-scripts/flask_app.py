@@ -1,3 +1,4 @@
+import csv
 import question
 from flask_cors import CORS
 from flask import Flask, request, jsonify, Response
@@ -38,7 +39,7 @@ def stream_tts(input_text):
 
 
 # Chat Evaluation Function
-def evaluate_quiz_question(question, user_answer, real_answer):
+def evaluate_quiz_question(question, user_answer, real_answer, answer_file):
     client = OpenAI(api_key=api_key)
 
     try:
@@ -50,8 +51,9 @@ def evaluate_quiz_question(question, user_answer, real_answer):
                     "content": "You are an assistant tasked with evaluating user answers to quiz questions. "
                                "The Real Answer is the solution provided by the quiz, stick to that. "
                                "Provide feedback comparing the user's answer to the correct answer. "
+                               "Give points at the end from 1 to 10 in the format 'Points: 1/10' or 'Points: 10/10'."
                                "Talk directly to the user and keep it short."
-                               "Don't offer help or more information"
+                               "Don't offer help or more information."
                 },
                 {
                     "role": "user",
@@ -59,7 +61,16 @@ def evaluate_quiz_question(question, user_answer, real_answer):
                 }
             ]
         )
-        return completion.choices[0].message.content.strip()
+        answer = completion.choices[0].message.content.strip()
+        point = int(answer.split("Points: ")[1].split("/")[0])
+        
+        with open(f"../data/quizzes/{answer_file}", 'a', newline='') as file:
+            writer = csv.writer(file, delimiter=';')
+            if os.stat(f"../data/quizzes/{answer_file}").st_size == 0:
+                print(answer_file, "is empty")
+                writer.writerow(["question", "user answer", "real answer", "points"])
+            writer.writerow([question, user_answer, real_answer, point])
+        return answer
     except Exception as e:
         raise RuntimeError(f"Quiz evaluation failed: {e}")
 
@@ -185,16 +196,36 @@ def evaluate_quiz():
     question = data.get("question")
     user_answer = data.get("user_answer")
     real_answer = data.get("real_answer")
+    answer_file = data.get("answer_file")
 
     if not all([question, user_answer, real_answer]):
         return jsonify({"error": "All fields (question, user_answer, real_answer) are required"}), 400
 
     try:
-        evaluation = evaluate_quiz_question(question, user_answer, real_answer)
+        evaluation = evaluate_quiz_question(question, user_answer, real_answer, answer_file)
         return jsonify({"evaluation": evaluation})
     except Exception as e:
         return jsonify({"error": f"Evaluation failed: {e}"}), 500
+    
+@app.route('/api/get_points', methods=['POST'])
+def get_points():
+    data = request.json
+    file = data.get("file")
+    user_points = 0
+    total_points = 0
+    try:
+        with open(f"../data/quizzes/{file}", mode="r", encoding="utf-8") as csvfile:
+            csv_reader = csv.DictReader(csvfile, delimiter=";")
+            for row in csv_reader:
+                user_points += int(row["points"])
+                total_points += 10
+        os.remove(f"../data/quizzes/{file}")
+    except FileNotFoundError:
+        return jsonify({"error": f"File not found: {file}"}), 404
+    except Exception as e:
+        return jsonify({"error": f"An error occurred: {e}"}), 500
 
+    return jsonify({"user_points": user_points, "total_points": total_points})
 
 if __name__ == '__main__':
     app.run(host='127.0.0.1', port=7990)
