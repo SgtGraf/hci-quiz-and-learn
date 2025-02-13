@@ -6,6 +6,11 @@
   background-color: #f4f4f9;
 }
 
+.start-container.finish {
+  flex-direction: column;
+  height: 75vh;
+}
+
 .start-container button {
   padding: 1rem 2rem;
   font-size: 1.25rem;

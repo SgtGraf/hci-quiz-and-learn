@@ -8,7 +8,7 @@
 </div>
 
 <!-- Quiz Content -->
-<div *ngIf="started">
+<div *ngIf="started && !finished">
   <div class="quiz-container">
     <!-- Toggle Button for Filler -->
     <div class="toggle-container">
@@ -70,4 +70,10 @@
       </div>
     </div>
   </div>
+</div>
+
+<div *ngIf="finished" class="start-container finish">
+  <h2>Quiz Completed!</h2>
+  <p>Your score: {{ correctCount }} / {{ totalQuestions }}</p>
+  <button (click)="navigateToQuizzes()">Back to Quizzes</button>
 </div>

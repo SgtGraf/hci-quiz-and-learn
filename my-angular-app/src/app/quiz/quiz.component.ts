@@ -3,6 +3,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { NgIf } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-quiz',
@@ -35,11 +36,12 @@ export class QuizComponent {
   fillerAudioUrl: string = ''; // Stores preloaded filler phrase
   isSpeaking = false;
   started = false;
+  finished: boolean = false;
 
   // Tooltip visibility
   showTooltip: boolean = false;
 
-  constructor(private route: ActivatedRoute, private http: HttpClient, private cdr: ChangeDetectorRef) {
+  constructor(private route: ActivatedRoute, private http: HttpClient, private cdr: ChangeDetectorRef, private router: Router) {
   }
 
   ngOnInit() {
@@ -213,10 +215,6 @@ export class QuizComponent {
             // Play the evaluation feedback via TTS
             this.playFeedbackAudio(response.evaluation);
 
-            if (response.evaluation.toLowerCase().includes('your answer is correct')) {
-              this.correctCount++;
-            }
-
             this.nextQuestionPending = true;
           },
           error: (error) => {
@@ -277,14 +275,13 @@ export class QuizComponent {
       this.preloadFillerAudio(); // Preload filler for next question
       this.triggerTTS();
     } else {
+      this.finished = true;
       this.calculateResults();
     }
   }
 
   calculateResults() {
     this.quizComplete = true;
-    var user_points = 0
-    var total_points = 0
 
     const payload = { file: this.answerFile };
 
@@ -293,15 +290,17 @@ export class QuizComponent {
     })
       .subscribe({
         next: (response: any) => {
-            user_points = parseInt(response.user_points, 10);
-            total_points = parseInt(response.total_points, 10);
-            this.percentage = Math.round((user_points / total_points) * 100);
-            alert(`Quiz complete! You reached ${user_points} out of ${total_points} points correctly (${this.percentage}%).`);
+            this.correctCount = parseInt(response.user_points, 10);
+            this.totalQuestions = parseInt(response.total_points, 10);
         },
         error: (error) => {
           console.error('Error generating TTS:', error);
           alert('Failed to generate audio for feedback.');
         }
       });
+  }
+
+  navigateToQuizzes() {
+    this.router.navigate(['/quizzes']);
   }
 }
