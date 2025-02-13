@@ -74,6 +74,6 @@
 
 <div *ngIf="finished" class="start-container finish">
   <h2>Quiz Completed!</h2>
-  <p>Your score: {{ correctCount }} / {{ totalQuestions }}</p>
+  <p>{{ feedback }}</p>
   <button (click)="navigateToQuizzes()">Back to Quizzes</button>
 </div>

@@ -290,8 +290,10 @@ export class QuizComponent {
     })
       .subscribe({
         next: (response: any) => {
-            this.correctCount = parseInt(response.user_points, 10);
-            this.totalQuestions = parseInt(response.total_points, 10);
+            const user_points = parseInt(response.user_points, 10);
+            const total_points = parseInt(response.total_points, 10);
+            this.feedback = `Your score: ${ user_points } / ${ total_points }`;
+            this.playFeedbackAudio(`Quiz completed! ${this.feedback}`);
         },
         error: (error) => {
           console.error('Error generating TTS:', error);
