@@ -5,7 +5,7 @@ import { QuizComponent } from './quiz/quiz.component';
 import { QuizzesSelectionComponent } from './quizzes-selection/quizzes-selection.component';
 
 export const appRoutes: Routes = [
-  { path: '', component: HomeComponent },
+  { path: '', component: QuizzesSelectionComponent },
   { path: 'home', component: HomeComponent },
   { path: 'quizzes', component: QuizzesSelectionComponent },
   { path: 'quiz/:id', component: QuizComponent }
