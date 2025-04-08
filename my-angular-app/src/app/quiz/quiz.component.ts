@@ -2,8 +2,7 @@ import { Component, ChangeDetectorRef, OnInit } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { NgIf } from '@angular/common';
-import { ActivatedRoute } from '@angular/router';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 
 @Component({
   selector: 'app-quiz',
@@ -11,11 +10,11 @@ import { Router } from '@angular/router';
   imports: [
     FormsModule,
     NgIf,
-    ],
+  ],
   templateUrl: './quiz.component.html',
   styleUrls: ['./quiz.component.css'],
 })
-export class QuizComponent {
+export class QuizComponent implements OnInit {
   quizId: string = '';
   questions: string[] = [];
   correctAnswers: string[] = [];
@@ -29,27 +28,31 @@ export class QuizComponent {
   totalQuestions: number = 0;
   quizComplete: boolean = false;
   percentage: number = 0;
-  loading: boolean = false; // To control the spinner visibility
-  feedback: string = ''; // To display the evaluation feedback
+  loading: boolean = false;
+  feedback: string = '';
   nextQuestionPending: boolean = false;
   useFiller: boolean = true;
-  fillerAudioUrl: string = ''; // Stores preloaded filler phrase
+  fillerAudioUrl: string = '';
   isSpeaking = false;
   started = false;
   finished: boolean = false;
-
-  // Tooltip visibility
   showTooltip: boolean = false;
 
-  constructor(private route: ActivatedRoute, private http: HttpClient, private cdr: ChangeDetectorRef, private router: Router) {
-  }
+  // Central audio controller
+  private currentAudio: HTMLAudioElement | null = null;
+
+  constructor(
+    private route: ActivatedRoute,
+    private http: HttpClient,
+    private cdr: ChangeDetectorRef,
+    private router: Router
+  ) {}
 
   ngOnInit() {
-    // Wait for the route parameters to initialize before calling loadQuestions
     this.route.params.subscribe((params) => {
-      this.quizId = params['id']; // Extract quiz ID from the URL
+      this.quizId = params['id'];
       if (this.quizId) {
-        this.loadQuestions(); // Call loadQuestions only after quizId is set
+        this.loadQuestions();
         this.answerFile = `${this.quizId}_answer.csv`;
       } else {
         console.error('Quiz ID not found in route parameters.');
@@ -58,59 +61,61 @@ export class QuizComponent {
     });
   }
 
+  private stopCurrentAudio() {
+    if (this.currentAudio) {
+      this.currentAudio.pause();
+      this.currentAudio.currentTime = 0;
+      this.currentAudio = null;
+    }
+  }
+
   loadQuestions() {
     const apiUrl = `http://127.0.0.1:7990/api/question_answers?quiz=${this.quizId}`;
 
-    this.http
-      .get<{ question: string; answer: string }[]>(apiUrl)
-      .subscribe({
-        next: (data) => {
-          try {
-            console.log('Raw JSON Data:', data);
-
-            if (!Array.isArray(data) || data.length === 0) {
-              throw new Error('No valid questions received.');
-            }
-
-            this.questions = data.map((item) => item.question.trim());
-            this.correctAnswers = data.map((item) => item.answer.trim());
-            this.totalQuestions = this.questions.length;
-
-            if (this.totalQuestions > 0) {
-              this.currentQuestion = this.questions[0];
-              this.correctAnswer = this.correctAnswers[0];
-              this.preloadFillerAudio(); // Preload filler audio for lower latency
-            } else {
-              alert('No questions available.');
-            }
-          } catch (error) {
-            console.error('Error parsing JSON data:', error);
-            alert('Failed to parse questions. Please contact support.');
+    this.http.get<{ question: string; answer: string }[]>(apiUrl).subscribe({
+      next: (data) => {
+        try {
+          if (!Array.isArray(data) || data.length === 0) {
+            throw new Error('No valid questions received.');
           }
-        },
-        error: (error) => {
-          console.error('Error fetching questions:', error);
-        },
-      });
+
+          this.questions = data.map((item) => item.question.trim());
+          this.correctAnswers = data.map((item) => item.answer.trim());
+          this.totalQuestions = this.questions.length;
+
+          if (this.totalQuestions > 0) {
+            this.currentQuestion = this.questions[0];
+            this.correctAnswer = this.correctAnswers[0];
+            this.preloadFillerAudio();
+          } else {
+            alert('No questions available.');
+          }
+        } catch (error) {
+          console.error('Error parsing JSON data:', error);
+          alert('Failed to parse questions. Please contact support.');
+        }
+      },
+      error: (error) => {
+        console.error('Error fetching questions:', error);
+      },
+    });
   }
 
   preloadFillerAudio() {
-    this.http.get('http://127.0.0.1:7990/api/filler_tts', { responseType: 'blob' })
-      .subscribe({
-        next: (audioBlob) => {
-          this.fillerAudioUrl = URL.createObjectURL(audioBlob);
-          console.log('Filler audio preloaded:', this.fillerAudioUrl);
-        },
-        error: (error) => {
-          console.error('Error preloading filler TTS:', error);
-          this.fillerAudioUrl = ''; // Reset on error
-        }
-      });
+    this.http.get('http://127.0.0.1:7990/api/filler_tts', { responseType: 'blob' }).subscribe({
+      next: (audioBlob) => {
+        this.fillerAudioUrl = URL.createObjectURL(audioBlob);
+        console.log('Filler audio preloaded:', this.fillerAudioUrl);
+      },
+      error: (error) => {
+        console.error('Error preloading filler TTS:', error);
+        this.fillerAudioUrl = '';
+      },
+    });
   }
 
   startQuiz() {
     this.started = true;
-
     if (this.currentQuestion) {
       this.triggerTTS();
     }
@@ -126,14 +131,16 @@ export class QuizComponent {
       return;
     }
 
+    this.stopCurrentAudio();
+
     const payload = { text: this.currentQuestion };
 
     this.http.post('http://127.0.0.1:7990/api/tts_stream', payload, { responseType: 'blob' })
       .subscribe({
         next: (audioBlob) => {
           const audioUrl = URL.createObjectURL(audioBlob);
-          const audio = new Audio(audioUrl);
-          audio.play();
+          this.currentAudio = new Audio(audioUrl);
+          this.currentAudio.play();
         },
         error: (error) => {
           console.error('Error generating TTS:', error);
@@ -162,7 +169,6 @@ export class QuizComponent {
 
     recognition.onresult = (event: any) => {
       const spokenText = event.results[0][0].transcript;
-      console.log('Recognized Speech:', spokenText);
       this.userAnswer = spokenText;
       this.cdr.detectChanges();
     };
@@ -192,7 +198,6 @@ export class QuizComponent {
     this.feedback = '';
     this.nextQuestionPending = false;
 
-    // First, play the filler audio before submitting
     this.playFillerAudio(() => {
       const payload = {
         question: this.currentQuestion,
@@ -201,48 +206,44 @@ export class QuizComponent {
         answer_file: this.answerFile,
       };
 
-      this.http
-        .post('http://127.0.0.1:7990/api/evaluate_quiz', payload, {
-          headers: new HttpHeaders({ 'Content-Type': 'application/json' }),
-        })
-        .subscribe({
-          next: (response: any) => {
-            console.log('Evaluation Response:', response);
-
-            this.loading = false;
-            this.feedback = response.evaluation;
-
-            // Play the evaluation feedback via TTS
-            this.playFeedbackAudio(response.evaluation);
-
-            this.nextQuestionPending = true;
-          },
-          error: (error) => {
-            console.error('Error submitting answer:', error);
-            this.loading = false;
-            this.feedback = 'Failed to submit your answer. Please try again.';
-          },
-        });
+      this.http.post('http://127.0.0.1:7990/api/evaluate_quiz', payload, {
+        headers: new HttpHeaders({ 'Content-Type': 'application/json' }),
+      }).subscribe({
+        next: (response: any) => {
+          this.loading = false;
+          this.feedback = response.evaluation;
+          this.playFeedbackAudio(response.evaluation);
+          this.nextQuestionPending = true;
+        },
+        error: (error) => {
+          console.error('Error submitting answer:', error);
+          this.loading = false;
+          this.feedback = 'Failed to submit your answer. Please try again.';
+        },
+      });
     });
   }
 
   playFillerAudio(callback: () => void) {
     if (this.fillerAudioUrl && this.useFiller) {
-      setTimeout(() => { // wait 1.5 seconds before playing
-        const audio = new Audio(this.fillerAudioUrl);
-        audio.onended = callback;
-        audio.play().then(r => console.log());
+      setTimeout(() => {
+        this.stopCurrentAudio();
+
+        this.currentAudio = new Audio(this.fillerAudioUrl);
+        this.currentAudio.onended = callback;
+        this.currentAudio.play().then(() => console.log());
       }, 1500);
     } else {
       callback();
     }
   }
 
-
   playFeedbackAudio(feedbackText: string) {
     if (!feedbackText) {
       return;
     }
+
+    this.stopCurrentAudio();
 
     const payload = { text: feedbackText };
 
@@ -250,8 +251,8 @@ export class QuizComponent {
       .subscribe({
         next: (audioBlob) => {
           const audioUrl = URL.createObjectURL(audioBlob);
-          const audio = new Audio(audioUrl);
-          audio.play();
+          this.currentAudio = new Audio(audioUrl);
+          this.currentAudio.play();
         },
         error: (error) => {
           console.error('Error generating TTS:', error);
@@ -262,7 +263,6 @@ export class QuizComponent {
 
   closePopup() {
     this.feedback = '';
-
     if (this.nextQuestionPending) {
       this.loadNextQuestion();
     }
@@ -275,7 +275,7 @@ export class QuizComponent {
       this.correctAnswer = this.correctAnswers[this.questionIndex];
       this.userAnswer = '';
       this.recognizedText = '';
-      this.preloadFillerAudio(); // Preload filler for next question
+      this.preloadFillerAudio();
       this.triggerTTS();
     } else {
       this.finished = true;
@@ -290,19 +290,18 @@ export class QuizComponent {
 
     this.http.post('http://127.0.0.1:7990/api/get_points', payload, {
       headers: new HttpHeaders({ 'Content-Type': 'application/json' }),
-    })
-      .subscribe({
-        next: (response: any) => {
-            const user_points = parseInt(response.user_points, 10);
-            const total_points = parseInt(response.total_points, 10);
-            this.feedback = `Your score: ${ user_points } / ${ total_points }`;
-            this.playFeedbackAudio(`Quiz completed! ${this.feedback}`);
-        },
-        error: (error) => {
-          console.error('Error generating TTS:', error);
-          alert('Failed to generate audio for feedback.');
-        }
-      });
+    }).subscribe({
+      next: (response: any) => {
+        const user_points = parseInt(response.user_points, 10);
+        const total_points = parseInt(response.total_points, 10);
+        this.feedback = `Your score: ${user_points} / ${total_points}`;
+        this.playFeedbackAudio(`Quiz completed! ${this.feedback}`);
+      },
+      error: (error) => {
+        console.error('Error generating TTS:', error);
+        alert('Failed to generate audio for feedback.');
+      }
+    });
   }
 
   navigateToQuizzes() {
