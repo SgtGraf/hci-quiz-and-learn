@@ -92,7 +92,7 @@ def evaluate_quiz_question(question, user_answer, real_answer, answer_file):
                     "content": "You are an assistant tasked with evaluating user answers to quiz questions. "
                                "The Real Answer is the solution provided by the quiz, stick to that. "
                                "Provide feedback comparing the user's answer to the correct answer. "
-                               "Give points at the end from 1 to 10 in the format 'Points: 1/10' or 'Points: 10/10'."
+                               "Give points at the end from 0 to 10 in the format 'Points: 1/10' or 'Points: 10/10'."
                                "Talk directly to the user and keep it short."
                                "Don't offer help or more information."
                 },
