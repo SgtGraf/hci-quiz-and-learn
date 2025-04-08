@@ -6,6 +6,7 @@ import os
 import whisper
 from dotenv import load_dotenv
 from openai import OpenAI
+import random
 
 # Load environment variables
 load_dotenv()
@@ -19,6 +20,46 @@ model = whisper.load_model("base")
 
 # Enable CORS for all routes
 CORS(app, resources={r"/*": {"origins": "http://localhost:4200"}})
+
+# Store preloaded filler phrases
+filler_phrases = []
+
+def initialize_filler_phrases():
+    """Generate 30 filler phrases at quiz initialization."""
+    global filler_phrases
+    client = OpenAI(api_key=api_key)
+
+    try:
+        completion = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {
+                    "role": "system",
+                    "content": (
+                        "Generate 30 unique short filler phrases to be used before evaluating a quiz answer. "
+                        "The tone should be casual, natural, and encouraging. "
+                        "Avoid overused expressions. "
+                        "Each phrase must be about 10 words. "
+                        "Separate them with a semicolon."
+
+                    )
+                }
+            ]
+        )
+        filler_phrases = completion.choices[0].message.content.strip().split("; ")
+        print(f"Preloaded {len(filler_phrases)} filler phrases.")
+
+    except Exception as e:
+        raise RuntimeError(f"Filler phrase initialization failed: {e}")
+
+def generate_filler_phrase():
+    """Pick a random filler phrase from the preloaded list."""
+    if not filler_phrases:
+        raise RuntimeError("Filler phrases not initialized. Run initialize_filler_phrases() first.")
+    return random.choice(filler_phrases)
+
+# Call this once at startup to preload phrases
+initialize_filler_phrases()
 
 
 # Generate TTS Function (Real-time Streaming)
@@ -63,7 +104,7 @@ def evaluate_quiz_question(question, user_answer, real_answer, answer_file):
         )
         answer = completion.choices[0].message.content.strip()
         point = int(answer.split("Points: ")[1].split("/")[0])
-        
+
         with open(f"../data/quizzes/{answer_file}", 'a', newline='') as file:
             writer = csv.writer(file, delimiter=';')
             if os.stat(f"../data/quizzes/{answer_file}").st_size == 0:
@@ -75,26 +116,6 @@ def evaluate_quiz_question(question, user_answer, real_answer, answer_file):
         raise RuntimeError(f"Quiz evaluation failed: {e}")
 
 
-# generate Filler Phrase with ChatGPT
-def generate_filler_phrase():
-    client = OpenAI(api_key=api_key)
-
-    try:
-        completion = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[
-                {
-                    "role": "system",
-                    "content": "Generate a short filler phrase before evaluating a quiz answer. "
-                               "Keep it under 5 words. Example: 'Let me think about that'."
-                }
-            ]
-        )
-        return completion.choices[0].message.content.strip()
-    except Exception as e:
-        raise RuntimeError(f"Filler phrase generation failed: {e}")
-
-
 # API: Fetch Quiz Questions and Answers
 @app.route('/api/quizzes', methods=['GET'])
 def get_quizzes():
@@ -102,7 +123,7 @@ def get_quizzes():
 
 @app.route('/api/question_answers', methods=['GET'])
 def get_question_answers():
-    quiz = request.args.get('quiz') 
+    quiz = request.args.get('quiz')
     if quiz is None:
         return question.get_questions()
     return question.get_question_answers(quiz)
@@ -116,7 +137,7 @@ def get_questions():
 
 @app.route('/api/answers', methods=['GET'])
 def get_answers():
-    quiz = request.args.get('quiz') 
+    quiz = request.args.get('quiz')
     if quiz is None:
         return question.get_questions()
     return question.get_answers(quiz)
@@ -178,7 +199,7 @@ def filler_tts():
 
         return Response(
             stream_tts(filler_phrase),
-            mimetype="audio/ogg",  #
+            mimetype="audio/ogg",
             headers={
                 "Content-Disposition": "inline; filename=filler.ogg",
                 "Transfer-Encoding": "chunked",
@@ -206,7 +227,8 @@ def evaluate_quiz():
         return jsonify({"evaluation": evaluation})
     except Exception as e:
         return jsonify({"error": f"Evaluation failed: {e}"}), 500
-    
+
+
 @app.route('/api/get_points', methods=['POST'])
 def get_points():
     data = request.json

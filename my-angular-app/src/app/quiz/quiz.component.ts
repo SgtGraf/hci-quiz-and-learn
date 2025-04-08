@@ -228,13 +228,16 @@ export class QuizComponent {
 
   playFillerAudio(callback: () => void) {
     if (this.fillerAudioUrl && this.useFiller) {
-      const audio = new Audio(this.fillerAudioUrl);
-      audio.onended = callback;
-      audio.play();
+      setTimeout(() => { // wait 1.5 seconds before playing
+        const audio = new Audio(this.fillerAudioUrl);
+        audio.onended = callback;
+        audio.play().then(r => console.log());
+      }, 1500);
     } else {
       callback();
     }
   }
+
 
   playFeedbackAudio(feedbackText: string) {
     if (!feedbackText) {
