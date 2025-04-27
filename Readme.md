@@ -55,7 +55,9 @@ Running on http://127.0.0.1:7990
 
 7. Add the following line into the `.env` file:
 
-OPENAI_API_KEY=your_copied_api_key_here
-
+    ```env
+    OPENAI_API_KEY=your_copied_api_key_here
+    ```
+    
 8. Save the file. The backend will now be able to access the OpenAI API securely.
 
