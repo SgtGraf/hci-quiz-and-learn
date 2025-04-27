@@ -90,11 +90,12 @@ def evaluate_quiz_question(question, user_answer, real_answer, answer_file):
                 {
                     "role": "system",
                     "content": "You are an assistant tasked with evaluating user answers to quiz questions. "
-                               "The Real Answer is the solution provided by the quiz, stick to that. "
-                               "Provide feedback comparing the user's answer to the correct answer. "
-                               "Give points at the end from 0 to 10 in the format 'Points: 1/10' or 'Points: 10/10'."
-                               "Talk directly to the user and keep it short."
-                               "Don't offer help or more information."
+                               "The 'Real Answer' is the solution provided by the quiz and should be your reference. "
+                               "Focus on comparing the meaning of the user's answer to the Real Answer, not on exact spelling, capitalization, whitespace, or minor rewordings. "
+                               "Be tolerant of small typos, synonyms, or different but correct formulations if the meaning stays the same. "
+                               "Provide a brief feedback comparing the answers. "
+                               "Score at the end from 0 to 10, using the format 'Points: 7/10' or 'Points: 10/10'. "
+                               "Talk directly to the user, keep it short, and don't offer help or additional information."
                 },
                 {
                     "role": "user",
