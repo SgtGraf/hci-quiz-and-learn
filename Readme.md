@@ -3,7 +3,7 @@
 ## Setup
 
 Requirements:
-- python
+- python (Version <=3.11.9 required!)
 - pip
 
 Create an .env file that contains the Openai API key:
@@ -36,6 +36,12 @@ The flask server contains api calls to get questions and answers from the backen
 ` python flask_app.py `
 
 Running on http://127.0.0.1:7990
+
+### Run the frontend
+
+`cd my-angular-app `
+
+`ng serve `
 
 
 ## How to Set Up OpenAI API Key
